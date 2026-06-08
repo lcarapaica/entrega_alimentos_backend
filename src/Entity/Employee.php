@@ -46,7 +46,6 @@ class Employee
     /**
      * @ORM\ManyToOne(targetEntity=Department::class, inversedBy="employees")
      * @ORM\JoinColumn(nullable=true, onDelete="SET NULL")
-     * ^^^^^^^^^^^^^^^^^^
      */
     private $department;
 
@@ -54,6 +53,22 @@ class Employee
      * @ORM\OneToOne(targetEntity=User::class, mappedBy="employee", cascade={"persist"})
      */
     private $user;
+
+    /**
+     * Profile photo path. If null, a photo capture is required on next delivery.
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $foto_path;
+
+    /**
+     * The physical distribution site this employee is assigned to.
+     * Determines which Site they report to during a Distribution event.
+     *
+     * @ORM\ManyToOne(targetEntity=Site::class)
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $site;
 
     public function __construct()
     {
@@ -101,7 +116,7 @@ class Employee
         return $this;
     }
 
-    public function getisActive(): ?bool
+    public function getIsActive(): ?bool
     {
         return $this->is_active;
     }
@@ -144,17 +159,41 @@ class Employee
 
     public function setUser(?User $user): self
     {
-        // unset the owning side of the relation if necessary
+        // Unset the owning side of the relation if necessary
         if ($user === null && $this->user !== null) {
             $this->user->setEmployee(null);
         }
 
-        // set the owning side of the relation if necessary
+        // Set the owning side of the relation if necessary
         if ($user !== null && $user->getEmployee() !== $this) {
             $user->setEmployee($this);
         }
 
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function getFotoPath(): ?string
+    {
+        return $this->foto_path;
+    }
+
+    public function setFotoPath(?string $foto_path): self
+    {
+        $this->foto_path = $foto_path;
+
+        return $this;
+    }
+
+    public function getSite(): ?Site
+    {
+        return $this->site;
+    }
+
+    public function setSite(?Site $site): self
+    {
+        $this->site = $site;
 
         return $this;
     }

@@ -4,11 +4,15 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @ORM\Table(name="`user`")
  */
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface, EquatableInterface
 {
     /**
      * @ORM\Id
@@ -51,7 +55,7 @@ class User
     public function __construct()
     {
         $this->registered_at = new \DateTime();
-        $this->is_active = true; // Default accounts to active
+        $this->is_active = true;
     }
 
     public function getId(): ?int
@@ -71,10 +75,18 @@ class User
         return $this;
     }
 
+    /**
+     * The visual identifier that represents this user (used in session/JWT).
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // Guarantee every user has at least ROLE_USER 
+        // Guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
@@ -97,6 +109,40 @@ class User
         $this->password = $password;
 
         return $this;
+    }
+
+    /**
+     * Erases sensitive data after authentication. Required by UserInterface.
+     */
+    public function eraseCredentials(): void {}
+
+    /**
+     * Required by legacy Symfony 5.4 / PHP 7.4 UserInterface.
+     */
+    public function getSalt(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Required by legacy Symfony 5.4 / PHP 7.4 UserInterface.
+     * Returns the email as the username identifier.
+     */
+    public function getUsername(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * Required by EquatableInterface. Compares two User objects by email.
+     */
+    public function isEqualTo(UserInterface $user): bool
+    {
+        if (!$user instanceof self) {
+            return false;
+        }
+
+        return $this->email === $user->getEmail();
     }
 
     public function getEmployee(): ?Employee
