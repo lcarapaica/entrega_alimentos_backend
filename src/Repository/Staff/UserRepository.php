@@ -38,4 +38,142 @@ class UserRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * Filters, searches, and paginates the users list based on criteria array.
+     */
+    public function searchAndPaginate(array $criteria): array
+    {
+        // Set fallback default values for missing keys
+        $criteria = array_merge([
+            'search'         => '',
+            'page'           => 1,
+            'limit'          => 25,
+            'hasAdminAccess' => false,
+            'role'           => null,
+            'isActive'       => true,
+            'sort'           => 'id',
+            'order'          => 'DESC',
+        ], $criteria);
+
+        // Prepares array keys as local variables ($search, $page, $limit, etc.)
+        $criteria['search'] = trim($criteria['search']);
+        extract($criteria);
+        
+        // Start building the query with alias 'u' and left join employee 'e'
+        $qb = $this->createQueryBuilder('u')
+            ->leftJoin('u.employee', 'e');
+
+        // Activity filter: non-admins are forced to only see active records
+        if (!$hasAdminAccess || $isActive === true) {
+            $qb->andWhere('u.deleted_at IS NULL');
+        } elseif ($isActive === false) {
+            $qb->andWhere('u.deleted_at IS NOT NULL');
+        }
+
+        // Role category filter
+        if ($role !== null && $role !== '') {
+            $qb->andWhere('u.roles LIKE :role')
+                ->setParameter('role', '%"' . $role . '"%');
+        }
+
+        // Multi-word search matching email, first_name, last_name, national_id, or p00_code
+        if (!empty($search)) {
+            $words = explode(' ', $search);
+            $i = 0;
+            foreach ($words as $word) {
+                $word = trim($word);
+                if ($word === '') continue;
+
+                $paramName = 'term_' . $i;
+                $qb->andWhere(
+                    $qb->expr()->orX(
+                        "u.email LIKE :$paramName",
+                        "e.first_name LIKE :$paramName",
+                        "e.last_name LIKE :$paramName",
+                        "e.national_id LIKE :$paramName",
+                        "e.p00_code LIKE :$paramName"
+                    )
+                )->setParameter($paramName, '%' . $word . '%');
+                $i++;
+            }
+        }
+
+        // Dynamic sorting with a safe field whitelist check
+        $allowedSortFields = [
+            'id' => 'u.id',
+            'email' => 'u.email',
+            'name' => 'e.first_name',
+            'surname' => 'e.last_name',
+        ];
+        $sortField = $allowedSortFields[$sort] ?? 'u.id';
+        $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
+        $qb->orderBy($sortField, $order);
+
+        // Pagination: Get total items count first using a cloned query builder
+        $countQb = clone $qb;
+        $countQb->select('COUNT(u.id)');
+        $totalItems = (int) $countQb->getQuery()->getSingleScalarResult();
+        $totalPages = (int) ceil($totalItems / $limit);
+
+        // Fetch paginated users
+        $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+        $users = $qb->getQuery()->getResult();
+
+        // Map database objects into a clean associative array
+        $data = [];
+        foreach ($users as $user) {
+            $roles = $user->getRoles();
+            $role = count($roles) > 0 ? $roles[0] : 'ROLE_USER';
+
+            // Hide superuser role from non-admins
+            if ($role === 'ROLE_SUPER_ADMIN' && !$hasAdminAccess) {
+                $role = 'ROLE_ADMIN';
+            }
+
+            $employee = $user->getEmployee();
+            $employeeData = null;
+            if ($employee !== null) {
+                $employeeData = [
+                    'id' => $employee->getId(),
+                    'national_id' => $employee->getNationalId(),
+                    'p00_code' => $employee->getP00Code(),
+                    'first_name' => $employee->getFirstName(),
+                    'last_name' => $employee->getLastName(),
+                    'foto_path' => $employee->getFotoPath(),
+                ];
+            }
+
+            $userArray = [
+                'id'       => $user->getId(),
+                'email'    => $user->getEmail(),
+                'name'     => $employee ? $employee->getFirstName() : null,
+                'surname'  => $employee ? $employee->getLastName() : null,
+                'role'     => $role,
+                'isActive' => $user->getIsActive(),
+                'mustChangePassword' => $user->getMustChangePassword(),
+                'registeredAt' => $user->getRegisteredAt() ? $user->getRegisteredAt()->format('Y-m-d H:i:s') : null,
+                'employee' => $employeeData,
+            ];
+
+            // Only add deletedAt field if current visitor has admin privileges
+            if ($hasAdminAccess) {
+                $userArray['deletedAt'] = $user->getDeletedAt() ? $user->getDeletedAt()->format('Y-m-d H:i:s') : null;
+            }
+
+            $data[] = $userArray;
+        }
+
+        // Return structured dataset paired with standard pagination metrics
+        return [
+            'data' => $data,
+            'meta' => [
+                'total_items'  => $totalItems,
+                'total_pages'  => (int)max(1, $totalPages),
+                'current_page' => (int)$page,
+                'limit'        => (int)$limit
+            ]
+        ];
+    }
 }

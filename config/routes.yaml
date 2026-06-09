@@ -1,5 +1,3 @@
-api_login:
-    path: /api/login
 
 app.api_doc:
     path: /api/doc

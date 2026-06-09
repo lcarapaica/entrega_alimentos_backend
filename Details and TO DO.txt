@@ -13,19 +13,26 @@ Production Requirements:
 	Pass over the config/jwt files
 	First user doesn´t need to be logged in and defaults to SUPER_ADMIN
 	Change the /doc/api to not be public
+	Make it so creating an user requires a national_id
 	
 Front-end notes:
-	Angular/frontend buddy must write code to delete the token from the browser's localStorage or sessionStorage. (logout)
+	Angular/frontend buddy must write code to delete the token from the browser's localStorage or sessionStorage. (logout):
+		Discard/delete the stored token (JWT) and refresh_token from its storage (e.g., localStorage, sessionStorage, cookies, or state).
+		Clear the authorization header on the client HTTP client (e.g. Axios, fetch, etc.).
+		Redirect the user to the login screen.
 
-RESOLVE: 
+TO DO: 
 	* To array in userDTO
 	* implementing refresh tokens and ACTUALLY giving logout functionality
 
 Done:
 	** Create workflows and screens
 	** Create entities
-	* Create JWT auth
-	* Create login system
-	* Create roles
+	** Create JWT auth
+	** Create login system
+	** Create roles
+	** Me module 
+	** Users module 
+	* FINAL USER MODULE TESTING
 	
 	

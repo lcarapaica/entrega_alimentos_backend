@@ -58,10 +58,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Equatab
      */
     private $is_active;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $must_change_password;
+
     public function __construct()
     {
         $this->registered_at = new \DateTime();
         $this->is_active = true;
+        $this->must_change_password = true;
     }
 
     public function getId(): ?int
@@ -194,6 +200,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Equatab
     public function setDeletedAt(?\DateTimeInterface $deleted_at): self
     {
         $this->deleted_at = $deleted_at;
+
+        return $this;
+    }
+
+    public function getMustChangePassword(): ?bool
+    {
+        return $this->must_change_password;
+    }
+
+    public function setMustChangePassword(bool $must_change_password): self
+    {
+        $this->must_change_password = $must_change_password;
 
         return $this;
     }

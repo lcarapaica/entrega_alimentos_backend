@@ -38,34 +38,27 @@ class UserService
      */
     public function registerUser(UserRegisterDTO $dto, ?User $creator): User
     {
-        // Check if this is the first user registration in bootstrap mode
-        $isBootstrap = $this->userRepository->count([]) === 0;
+        // Require an authenticated operator to register new users
+        if ($creator === null) {
+            throw new AccessDeniedException("Authenticated operator required to create users.");
+        }
+
+        // Verify the creator has permissions to create accounts
+        $creatorRoles = $creator->getRoles();
+        if (!in_array('ROLE_ADMIN', $creatorRoles) && !in_array('ROLE_SUPER_ADMIN', $creatorRoles)) {
+            throw new AccessDeniedException("Only Admins and Super Admins can register new users.");
+        }
+
         $roles = $dto->roles;
 
-        if ($isBootstrap) {
-            // FORCE the first user to be a Super Admin so you don't get locked out
-            $roles = ['ROLE_SUPER_ADMIN', 'ROLE_USER'];
-        } else {
-            // Require an authenticated operator if bootstrap mode is finished
-            if ($creator === null) {
-                throw new AccessDeniedException("Authenticated operator required to create users.");
-            }
+        // Block admins from registering superadmin accounts
+        if (in_array('ROLE_SUPER_ADMIN', $roles) && !in_array('ROLE_SUPER_ADMIN', $creatorRoles)) {
+            throw new AccessDeniedException("Only Super Admins can assign the Super Admin role.");
+        }
 
-            // Verify the creator has permissions to create accounts
-            $creatorRoles = $creator->getRoles();
-            if (!in_array('ROLE_ADMIN', $creatorRoles) && !in_array('ROLE_SUPER_ADMIN', $creatorRoles)) {
-                throw new AccessDeniedException("Only Admins and Super Admins can register new users.");
-            }
-
-            // Block admins from registering superadmin accounts
-            if (in_array('ROLE_SUPER_ADMIN', $roles) && !in_array('ROLE_SUPER_ADMIN', $creatorRoles)) {
-                throw new AccessDeniedException("Only Super Admins can assign the Super Admin role.");
-            }
-
-            // Guarantee basic role compliance for normal registrations
-            if (!in_array('ROLE_USER', $roles)) {
-                $roles[] = 'ROLE_USER';
-            }
+        // Guarantee basic role compliance for normal registrations
+        if (!in_array('ROLE_USER', $roles)) {
+            $roles[] = 'ROLE_USER';
         }
 
         // Clean up roles array to avoid any duplicates
@@ -77,16 +70,9 @@ class UserService
             throw new \InvalidArgumentException("Email is already registered.");
         }
 
-        // Resolve and validate employee linkage according to role rules
+        // Resolve and validate employee linkage if national_id is provided
         $employee = null;
-        if (in_array('ROLE_SUPER_ADMIN', $roles)) {
-            if ($dto->national_id !== null) {
-                $employee = $this->getAndValidateEmployee($dto->national_id);
-            }
-        } else {
-            if ($dto->national_id === null || trim($dto->national_id) === '') {
-                throw new \InvalidArgumentException("Regular users must be linked to a valid employee.");
-            }
+        if ($dto->national_id !== null && trim($dto->national_id) !== '') {
             $employee = $this->getAndValidateEmployee($dto->national_id);
         }
 
@@ -97,6 +83,7 @@ class UserService
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
         $user->setIsActive(true);
         $user->setRegisteredAt(new \DateTime());
+        $user->setMustChangePassword(true);
 
         if ($employee !== null) {
             $user->setEmployee($employee);
@@ -128,6 +115,7 @@ class UserService
 
         // Hash and save the new password
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->new_password));
+        $user->setMustChangePassword(false);
         $this->userRepository->add($user, true);
     }
 
@@ -143,6 +131,7 @@ class UserService
 
         // Hash and save the forced password update
         $userToModify->setPassword($this->passwordHasher->hashPassword($userToModify, $newPassword));
+        $userToModify->setMustChangePassword(true);
         $this->userRepository->add($userToModify, true);
     }
 
@@ -163,18 +152,19 @@ class UserService
         // Update target roles ensuring basic rules and superadmin constraints
         $roles = $userToModify->getRoles();
         if ($dto->roles !== null) {
+            // Require Admin or Super Admin permissions to modify roles
+            $actorRoles = $actor->getRoles();
+            if (!in_array('ROLE_ADMIN', $actorRoles) && !in_array('ROLE_SUPER_ADMIN', $actorRoles)) {
+                throw new AccessDeniedException("Only Admins and Super Admins can modify user roles.");
+            }
+
             $targetRoles = $dto->roles;
             if (!in_array('ROLE_USER', $targetRoles)) {
                 $targetRoles[] = 'ROLE_USER';
             }
 
-            $actorRoles = $actor->getRoles();
             if (in_array('ROLE_SUPER_ADMIN', $targetRoles) && !in_array('ROLE_SUPER_ADMIN', $actorRoles)) {
                 throw new AccessDeniedException("Only Super Admins can assign the Super Admin role.");
-            }
-
-            if (!in_array('ROLE_SUPER_ADMIN', $targetRoles) && $userToModify->getEmployee() === null) {
-                throw new \InvalidArgumentException("Regular users must be linked to a valid employee.");
             }
 
             $userToModify->setRoles($targetRoles);
@@ -194,18 +184,9 @@ class UserService
                     throw new AccessDeniedException("Only Admins and Super Admins can change the linked employee record.");
                 }
 
-                $roles = $userToModify->getRoles();
-                if (in_array('ROLE_SUPER_ADMIN', $roles)) {
-                    if ($dto->national_id === null || trim($dto->national_id) === '') {
-                        $userToModify->setEmployee(null);
-                    } else {
-                        $employee = $this->getAndValidateEmployee($dto->national_id, $userToModify);
-                        $userToModify->setEmployee($employee);
-                    }
+                if ($dto->national_id === null || trim($dto->national_id) === '') {
+                    $userToModify->setEmployee(null);
                 } else {
-                    if ($dto->national_id === null || trim($dto->national_id) === '') {
-                        throw new \InvalidArgumentException("Regular users must be linked to a valid employee.");
-                    }
                     $employee = $this->getAndValidateEmployee($dto->national_id, $userToModify);
                     $userToModify->setEmployee($employee);
                 }
