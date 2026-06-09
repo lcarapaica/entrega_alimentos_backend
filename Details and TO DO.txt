@@ -4,3 +4,7 @@ Requirements installed:
 	composer require symfony/orm-pack
 	composer require --dev symfony/maker-bundle
 	composer require symfony/dotenv:5.4.* symfony/validator:5.4.* symfony/rate-limiter:5.4.* symfony/security-bundle:5.4.* symfony/http-client:5.4.*
+	composer require lexik/jwt-authentication-bundle
+	
+Production Requirements:
+	Pass over the config/jwt files
