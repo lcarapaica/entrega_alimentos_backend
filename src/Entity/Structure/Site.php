@@ -1,14 +1,11 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Structure;
 
-use App\Repository\SiteRepository;
+use App\Repository\Structure\SiteRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Represents a physical distribution site (headquarters/location) where
- * employees are assigned to collect their deliveries during a Distribution event.
- *
  * @ORM\Entity(repositoryClass=SiteRepository::class)
  */
 class Site
@@ -21,23 +18,18 @@ class Site
     private $id;
 
     /**
-     * Human-readable name of the site.
-     * Example: "Sede Principal Caracas", "Maracaibo"
      *
      * @ORM\Column(type="string", length=150)
      */
     private $name;
 
     /**
-     * City where this site is located.
      *
      * @ORM\Column(type="string", length=100)
      */
-    private $city;
 
+    private $region;
     /**
-     * Venezuelan state or region this site belongs to.
-     * Example: "Distrito Capital", "Zulia", "Carabobo"
      *
      * @ORM\Column(type="string", length=100)
      */
@@ -60,14 +52,14 @@ class Site
         return $this;
     }
 
-    public function getCity(): ?string
+    public function getRegion(): ?string
     {
-        return $this->city;
+        return $this->region;
     }
 
-    public function setCity(string $city): self
+    public function setRegion(string $region): self
     {
-        $this->city = $city;
+        $this->region = $region;
 
         return $this;
     }

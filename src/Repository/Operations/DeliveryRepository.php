@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Repository;
+namespace App\Repository\Operations;
 
-use App\Entity\Delivery;
-use App\Entity\Distribution;
-use App\Entity\Employee;
-use App\Entity\Site;
-use App\Entity\Station;
+use App\Entity\Operations\Delivery;
+use App\Entity\Operations\Distribution;
+use App\Entity\Staff\Employee;
+use App\Entity\Structure\Site;
+use App\Entity\Structure\Station;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -26,8 +26,7 @@ class DeliveryRepository extends ServiceEntityRepository
     }
 
     /**
-     * Checks whether an employee already has a Delivery record for a specific Station
-     * to prevent double claims.
+     * Checks whether an employee already has a Delivery record for a specific Station to prevent double claims.
      */
     public function existsForEmployeeAndStation(Employee $employee, Station $station): bool
     {
@@ -46,8 +45,7 @@ class DeliveryRepository extends ServiceEntityRepository
     /**
      * Returns all Station IDs for which an employee has a completed Delivery
      * within a given Distribution at a given Site.
-     * Used by the sequential progression check: to verify a previous station
-     * was completed before allowing access to the next one.
+     * Used by the sequential progression check.
      *
      * @return int[]
      */

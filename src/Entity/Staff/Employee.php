@@ -1,11 +1,15 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Staff;
 
-use App\Repository\EmployeeRepository;
+use App\Entity\Structure\Department;
+use App\Entity\Structure\JobTitle;
+use App\Entity\Structure\Site;
+use App\Repository\Staff\EmployeeRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ *
  * @ORM\Entity(repositoryClass=EmployeeRepository::class)
  */
 class Employee
@@ -21,6 +25,12 @@ class Employee
      * @ORM\Column(type="string", length=20, unique=true)
      */
     private $national_id;
+
+    /**
+     *
+     * @ORM\Column(type="string", length=20, unique=true)
+     */
+    private $p00_code;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -55,15 +65,12 @@ class Employee
     private $user;
 
     /**
-     * Profile photo path. If null, a photo capture is required on next delivery.
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $foto_path;
 
     /**
-     * The physical distribution site this employee is assigned to.
-     * Determines which Site they report to during a Distribution event.
      *
      * @ORM\ManyToOne(targetEntity=Site::class)
      * @ORM\JoinColumn(nullable=true)
@@ -88,6 +95,18 @@ class Employee
     public function setNationalId(string $national_id): self
     {
         $this->national_id = $national_id;
+
+        return $this;
+    }
+
+    public function getP00Code(): ?string
+    {
+        return $this->p00_code;
+    }
+
+    public function setP00Code(string $p00_code): self
+    {
+        $this->p00_code = $p00_code;
 
         return $this;
     }

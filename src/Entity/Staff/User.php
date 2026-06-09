@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Staff;
 
-use App\Repository\UserRepository;
+use App\Repository\Staff\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\User\EquatableInterface;
 
 /**
+ * 
  * @ORM\Entity(repositoryClass=UserRepository::class)
  * @ORM\Table(name="`user`")
  */
@@ -126,7 +127,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Equatab
 
     /**
      * Required by legacy Symfony 5.4 / PHP 7.4 UserInterface.
-     * Returns the email as the username identifier.
      */
     public function getUsername(): string
     {

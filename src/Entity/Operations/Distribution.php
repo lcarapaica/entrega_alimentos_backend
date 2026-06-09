@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Operations;
 
-use App\Repository\DistributionRepository;
+use App\Entity\Staff\User;
+use App\Repository\Operations\DistributionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -22,38 +23,30 @@ class Distribution
     private $id;
 
     /**
-     * Human-readable name for this distribution event.
-     * Example: "Jornada Junio 2025"
      *
      * @ORM\Column(type="string", length=150)
      */
     private $name;
 
     /**
-     * Optional descriptive notes about this distribution event.
      *
      * @ORM\Column(type="text", nullable=true)
      */
     private $description;
 
     /**
-     * The datetime when this distribution window was opened.
-     * Set automatically in constructor.
      *
      * @ORM\Column(type="datetime")
      */
     private $started_at;
 
     /**
-     * The datetime when this distribution window was closed.
-     * NULL means the window is still open.
      *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $ended_at;
 
     /**
-     * The administrative user who created/opened this distribution.
      *
      * @ORM\ManyToOne(targetEntity=User::class)
      * @ORM\JoinColumn(nullable=false)
@@ -120,7 +113,6 @@ class Distribution
 
     /**
      * Convenience method to check if this distribution window is currently open.
-     * A window is open when ended_at has not been set.
      */
     public function isOpen(): bool
     {

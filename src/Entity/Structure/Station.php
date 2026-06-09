@@ -1,17 +1,14 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Structure;
 
-use App\Repository\StationRepository;
+use App\Entity\Operations\Distribution;
+use App\Repository\Structure\StationRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Represents a single delivery station (table) within a Distribution event at a specific Site.
- * Stations are scoped per Distribution + Site, meaning each site in a distribution can define
- * its own set of stations with their own sequential order.
- *
- * The order_number field defines the mandatory progression sequence:
- * an employee must have a completed Delivery at station N before being allowed at station N+1.
+ * Represents a single delivery station  within a Distribution event at a specific Site.
+ * Each site in a distribution can define its own set of stations with their own sequential order.
  *
  * @ORM\Entity(repositoryClass=StationRepository::class)
  * @ORM\Table(
@@ -33,7 +30,6 @@ class Station
     private $id;
 
     /**
-     * Display label for this station.
      * Example: "Station 1 – Food Box", "Station 2 – School Kit"
      *
      * @ORM\Column(type="string", length=100)
@@ -42,7 +38,6 @@ class Station
 
     /**
      * Sequential position of this station within the distribution+site.
-     * Employees must complete all stations with a lower order_number before accessing this one.
      *
      * @ORM\Column(type="integer")
      */
@@ -57,8 +52,6 @@ class Station
     private $distribution;
 
     /**
-     * The physical site where this station is set up.
-     *
      * @ORM\ManyToOne(targetEntity=Site::class)
      * @ORM\JoinColumn(nullable=false)
      */

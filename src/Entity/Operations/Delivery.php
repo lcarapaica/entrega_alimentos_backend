@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Operations;
 
-use App\Repository\DeliveryRepository;
+use App\Entity\Staff\Employee;
+use App\Entity\Staff\User;
+use App\Entity\Structure\Station;
+use App\Repository\Operations\DeliveryRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Represents a single employee delivery record at a specific Station.
- * An employee can have one Delivery per Station (not one per Distribution),
- * since a Distribution at a Site may have multiple stations to pass through.
- *
- * Sequential progression enforcement is handled at the service layer, not here.
+ * Represents a single employee delivery record at a specific Station,
+ * An employee can have one Delivery per Station (not one per Distribution).
  *
  * @ORM\Entity(repositoryClass=DeliveryRepository::class)
  * @ORM\Table(
@@ -32,7 +32,6 @@ class Delivery
     private $id;
 
     /**
-     * The employee who received this delivery.
      *
      * @ORM\ManyToOne(targetEntity=Employee::class)
      * @ORM\JoinColumn(nullable=false)
@@ -40,8 +39,6 @@ class Delivery
     private $employee;
 
     /**
-     * The specific station at which this delivery was processed.
-     * The Distribution and Site are reachable via station->getDistribution() and station->getSite().
      *
      * @ORM\ManyToOne(targetEntity=Station::class)
      * @ORM\JoinColumn(nullable=false)
@@ -49,7 +46,6 @@ class Delivery
     private $station;
 
     /**
-     * The administrative user (operator) who submitted this delivery record.
      *
      * @ORM\ManyToOne(targetEntity=User::class)
      * @ORM\JoinColumn(nullable=false)
@@ -57,23 +53,46 @@ class Delivery
     private $operator;
 
     /**
-     * Disk path to the stored signature image (decoded from base64 at service layer).
+     * Disk path to the stored signature image (decoded from base64).
      *
      * @ORM\Column(type="string", length=255)
      */
     private $signature_path;
 
     /**
-     * The datetime this delivery record was created.
-     * Set automatically in constructor.
      *
      * @ORM\Column(type="datetime")
      */
     private $delivered_at;
 
+    /**
+     *
+     * @ORM\Column(type="boolean")
+     */
+    private $is_proxy_delivery;
+
+    /**
+     *
+     * @ORM\Column(type="string", length=20, nullable=true)
+     */
+    private $authorized_cedula;
+
+    /**
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $authorized_full_name;
+
+    /**
+     *
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $authorization_reason;
+
     public function __construct()
     {
         $this->delivered_at = new \DateTime();
+        $this->is_proxy_delivery = false;
     }
 
     public function getId(): ?int
@@ -137,6 +156,54 @@ class Delivery
     public function setDeliveredAt(\DateTimeInterface $delivered_at): self
     {
         $this->delivered_at = $delivered_at;
+
+        return $this;
+    }
+
+    public function getIsProxyDelivery(): bool
+    {
+        return $this->is_proxy_delivery;
+    }
+
+    public function setIsProxyDelivery(bool $is_proxy_delivery): self
+    {
+        $this->is_proxy_delivery = $is_proxy_delivery;
+
+        return $this;
+    }
+
+    public function getAuthorizedCedula(): ?string
+    {
+        return $this->authorized_cedula;
+    }
+
+    public function setAuthorizedCedula(?string $authorized_cedula): self
+    {
+        $this->authorized_cedula = $authorized_cedula;
+
+        return $this;
+    }
+
+    public function getAuthorizedFullName(): ?string
+    {
+        return $this->authorized_full_name;
+    }
+
+    public function setAuthorizedFullName(?string $authorized_full_name): self
+    {
+        $this->authorized_full_name = $authorized_full_name;
+
+        return $this;
+    }
+
+    public function getAuthorizationReason(): ?string
+    {
+        return $this->authorization_reason;
+    }
+
+    public function setAuthorizationReason(?string $authorization_reason): self
+    {
+        $this->authorization_reason = $authorization_reason;
 
         return $this;
     }

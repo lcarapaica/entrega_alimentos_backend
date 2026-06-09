@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Structure;
 
-use App\Repository\VicePresidencyRepository;
+use App\Repository\Structure\VicePresidencyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -72,7 +72,6 @@ class VicePresidency
     public function removeDepartment(Department $department): self
     {
         if ($this->departments->removeElement($department)) {
-            // set the owning side to null (unless already changed)
             if ($department->getVicePresidency() === $this) {
                 $department->setVicePresidency(null);
             }

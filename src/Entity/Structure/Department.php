@@ -1,13 +1,15 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Structure;
 
-use App\Repository\DepartmentRepository;
+use App\Entity\Staff\Employee;
+use App\Repository\Structure\DepartmentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * 
  * @ORM\Entity(repositoryClass=DepartmentRepository::class)
  */
 class Department
@@ -77,8 +79,6 @@ class Department
         return $this->employees;
     }
 
-    /**
-     */
     public function addEmployee(Employee $employee): self
     {
         if (!$this->employees->contains($employee)) {

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Repository;
+namespace App\Repository\Structure;
 
-use App\Entity\Distribution;
-use App\Entity\Site;
-use App\Entity\Station;
+use App\Entity\Operations\Distribution;
+use App\Entity\Structure\Site;
+use App\Entity\Structure\Station;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -42,7 +42,7 @@ class StationRepository extends ServiceEntityRepository
     }
 
     /**
-     * Returns all stations that precede the given station in the same Distribution+Site,
+     * Returns all stations that precede the given station in the same Distribution+Site.
      *
      * @return Station[]
      */
