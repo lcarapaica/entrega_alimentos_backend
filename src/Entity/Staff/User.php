@@ -39,7 +39,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Equatab
 
     /**
      * @ORM\OneToOne(targetEntity=Employee::class, inversedBy="user", cascade={"persist"})
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $employee;
 
@@ -47,6 +47,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Equatab
      * @ORM\Column(type="datetime")
      */
     private $registered_at;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $deleted_at;
 
     /**
      * @ORM\Column(type="boolean")
@@ -177,6 +182,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Equatab
     public function setIsActive(bool $is_active): self
     {
         $this->is_active = $is_active;
+
+        return $this;
+    }
+
+    public function getDeletedAt(): ?\DateTimeInterface
+    {
+        return $this->deleted_at;
+    }
+
+    public function setDeletedAt(?\DateTimeInterface $deleted_at): self
+    {
+        $this->deleted_at = $deleted_at;
 
         return $this;
     }

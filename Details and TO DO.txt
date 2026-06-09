@@ -5,6 +5,27 @@ Requirements installed:
 	composer require --dev symfony/maker-bundle
 	composer require symfony/dotenv:5.4.* symfony/validator:5.4.* symfony/rate-limiter:5.4.* symfony/security-bundle:5.4.* symfony/http-client:5.4.*
 	composer require lexik/jwt-authentication-bundle
+	composer update doctrine/annotations symfony/asset twig/twig nelmio/api-doc-bundle -W
+		(press y after)
+	composer require symfony/twig-bundle:5.4.*
 	
 Production Requirements:
 	Pass over the config/jwt files
+	First user doesn´t need to be logged in and defaults to SUPER_ADMIN
+	Change the /doc/api to not be public
+	
+Front-end notes:
+	Angular/frontend buddy must write code to delete the token from the browser's localStorage or sessionStorage. (logout)
+
+RESOLVE: 
+	* To array in userDTO
+	* implementing refresh tokens and ACTUALLY giving logout functionality
+
+Done:
+	** Create workflows and screens
+	** Create entities
+	* Create JWT auth
+	* Create login system
+	* Create roles
+	
+	

@@ -1,0 +1,18 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Intranet JPL Backend API
+            description: Sistema Automatizado de Control Operativo e Intranet Staff.
+            version: 1.0.0
+        components:
+            securitySchemes:
+                BearerAuth:
+                    type: apiKey
+                    in: header
+                    name: Authorization
+                    description: "Ingrese el token JWT obtenido del login con el prefijo 'Bearer '. Ejemplo: 'Bearer eyJhbGciOi...'"
+        security:
+            - BearerAuth: []
+    areas:
+        path_patterns:
+            - ^/api(?!/doc$)

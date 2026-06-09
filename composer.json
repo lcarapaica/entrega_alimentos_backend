@@ -4,14 +4,16 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "php": ">=7.2.5",
+        "php": ">=7.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/annotations": "^2.0",
+        "doctrine/annotations": "1.14.*",
         "doctrine/doctrine-bundle": "^2.13",
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^2.20",
         "lexik/jwt-authentication-bundle": "^2.21",
+        "nelmio/api-doc-bundle": "4.17.*",
+        "symfony/asset": "5.4.*",
         "symfony/console": "5.4.*",
         "symfony/dotenv": "5.4.*",
         "symfony/flex": "^1.17|^2",
@@ -20,8 +22,10 @@
         "symfony/rate-limiter": "5.4.*",
         "symfony/runtime": "5.4.*",
         "symfony/security-bundle": "5.4.*",
+        "symfony/twig-bundle": "5.4.*",
         "symfony/validator": "5.4.*",
-        "symfony/yaml": "5.4.*"
+        "symfony/yaml": "5.4.*",
+        "twig/twig": "3.11.*"
     },
     "config": {
         "allow-plugins": {
@@ -34,7 +38,15 @@
         "preferred-install": {
             "*": "dist"
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "policy": {
+            "advisories": {
+                "block": false
+            }
+        },
+        "audit": {
+            "block-insecure": false
+        }
     },
     "autoload": {
         "psr-4": {
