@@ -2,8 +2,6 @@
 
 namespace App\Entity\Staff;
 
-use App\Entity\Structure\Department;
-use App\Entity\Structure\JobTitle;
 use App\Entity\Structure\Site;
 use App\Repository\Staff\EmployeeRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -27,20 +25,18 @@ class Employee
     private $national_id;
 
     /**
+     * Employee code (P00 format).
+     * Nullable — retained for future use but not required by the import pipeline.
      *
-     * @ORM\Column(type="string", length=20, unique=true)
+     * @ORM\Column(type="string", length=20, unique=true, nullable=true)
      */
     private $p00_code;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $first_name;
 
-    /**
      * @ORM\Column(type="string", length=255)
      */
-    private $last_name;
+    private $full_name;
 
     /**
      * @ORM\Column(type="boolean")
@@ -48,14 +44,17 @@ class Employee
     private $is_active;
 
     /**
-     * @ORM\ManyToOne(targetEntity=JobTitle::class, inversedBy="employees")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $job_title;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Department::class, inversedBy="employees")
-     * @ORM\JoinColumn(nullable=true, onDelete="SET NULL")
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $vice_presidency;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $department;
 
@@ -65,13 +64,11 @@ class Employee
     private $user;
 
     /**
-     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $foto_path;
 
     /**
-     *
      * @ORM\ManyToOne(targetEntity=Site::class)
      * @ORM\JoinColumn(nullable=true)
      */
@@ -104,33 +101,21 @@ class Employee
         return $this->p00_code;
     }
 
-    public function setP00Code(string $p00_code): self
+    public function setP00Code(?string $p00_code): self
     {
         $this->p00_code = $p00_code;
 
         return $this;
     }
 
-    public function getFirstName(): ?string
+    public function getFullName(): ?string
     {
-        return $this->first_name;
+        return $this->full_name;
     }
 
-    public function setFirstName(string $first_name): self
+    public function setFullName(string $full_name): self
     {
-        $this->first_name = $first_name;
-
-        return $this;
-    }
-
-    public function getLastName(): ?string
-    {
-        return $this->last_name;
-    }
-
-    public function setLastName(string $last_name): self
-    {
-        $this->last_name = $last_name;
+        $this->full_name = $full_name;
 
         return $this;
     }
@@ -147,24 +132,36 @@ class Employee
         return $this;
     }
 
-    public function getJobTitle(): ?JobTitle
+    public function getJobTitle(): ?string
     {
         return $this->job_title;
     }
 
-    public function setJobTitle(?JobTitle $job_title): self
+    public function setJobTitle(?string $job_title): self
     {
         $this->job_title = $job_title;
 
         return $this;
     }
 
-    public function getDepartment(): ?Department
+    public function getVicePresidency(): ?string
+    {
+        return $this->vice_presidency;
+    }
+
+    public function setVicePresidency(?string $vice_presidency): self
+    {
+        $this->vice_presidency = $vice_presidency;
+
+        return $this;
+    }
+
+    public function getDepartment(): ?string
     {
         return $this->department;
     }
 
-    public function setDepartment(?Department $department): self
+    public function setDepartment(?string $department): self
     {
         $this->department = $department;
 
@@ -178,12 +175,10 @@ class Employee
 
     public function setUser(?User $user): self
     {
-        // Unset the owning side of the relation if necessary
         if ($user === null && $this->user !== null) {
             $this->user->setEmployee(null);
         }
 
-        // Set the owning side of the relation if necessary
         if ($user !== null && $user->getEmployee() !== $this) {
             $user->setEmployee($this);
         }

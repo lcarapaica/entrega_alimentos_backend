@@ -77,7 +77,7 @@ class UserRepository extends ServiceEntityRepository
                 ->setParameter('role', '%"' . $role . '"%');
         }
 
-        // Multi-word search matching email, first_name, last_name, national_id, or p00_code
+        // Multi-word search matching email only
         if (!empty($search)) {
             $words = explode(' ', $search);
             $i = 0;
@@ -86,25 +86,16 @@ class UserRepository extends ServiceEntityRepository
                 if ($word === '') continue;
 
                 $paramName = 'term_' . $i;
-                $qb->andWhere(
-                    $qb->expr()->orX(
-                        "u.email LIKE :$paramName",
-                        "e.first_name LIKE :$paramName",
-                        "e.last_name LIKE :$paramName",
-                        "e.national_id LIKE :$paramName",
-                        "e.p00_code LIKE :$paramName"
-                    )
-                )->setParameter($paramName, '%' . $word . '%');
+                $qb->andWhere("u.email LIKE :$paramName")
+                    ->setParameter($paramName, '%' . $word . '%');
                 $i++;
             }
         }
 
         // Dynamic sorting with a safe field whitelist check
         $allowedSortFields = [
-            'id' => 'u.id',
+            'id'    => 'u.id',
             'email' => 'u.email',
-            'name' => 'e.first_name',
-            'surname' => 'e.last_name',
         ];
         $sortField = $allowedSortFields[$sort] ?? 'u.id';
         $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
@@ -136,21 +127,19 @@ class UserRepository extends ServiceEntityRepository
             $employeeData = null;
             if ($employee !== null) {
                 $employeeData = [
-                    'id' => $employee->getId(),
+                    'id'          => $employee->getId(),
                     'national_id' => $employee->getNationalId(),
-                    'p00_code' => $employee->getP00Code(),
-                    'first_name' => $employee->getFirstName(),
-                    'last_name' => $employee->getLastName(),
-                    'foto_path' => $employee->getFotoPath(),
+                    'p00_code'    => $employee->getP00Code(),
+                    'full_name'   => $employee->getFullName(),
+                    'foto_path'   => $employee->getFotoPath(),
                 ];
             }
 
             $userArray = [
-                'id'       => $user->getId(),
-                'email'    => $user->getEmail(),
-                'name'     => $employee ? $employee->getFirstName() : null,
-                'surname'  => $employee ? $employee->getLastName() : null,
-                'role'     => $role,
+                'id'        => $user->getId(),
+                'email'     => $user->getEmail(),
+                'full_name' => $employee ? $employee->getFullName() : null,
+                'role'      => $role,
                 'isActive' => $user->getIsActive(),
                 'mustChangePassword' => $user->getMustChangePassword(),
                 'registeredAt' => $user->getRegisteredAt() ? $user->getRegisteredAt()->format('Y-m-d H:i:s') : null,

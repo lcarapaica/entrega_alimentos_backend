@@ -22,7 +22,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use OpenApi\Annotations as OA;
 
-class AuthController extends AbstractController
+class UserController extends AbstractController
 {
     private UserService $userService;
     private UserRepository $userRepository;
@@ -185,23 +185,19 @@ class AuthController extends AbstractController
      */
     public function reauthenticate(Request $request): JsonResponse
     {
-        // Enforce that the request is authenticated
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->json(['error' => 'Authentication required.'], 401);
         }
 
-        // Bind request data to the re-authentication DTO
         $data = json_decode($request->getContent(), true) ?? [];
         $dto = new ReauthenticateDTO($data);
 
-        // Validate the password input
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
             return $this->json(['valid' => false, 'error' => 'Password is required.'], 400);
         }
 
-        // Verify the password and return validation results
         $isValid = $this->userService->verifyPassword($currentUser, $dto->password);
         if (!$isValid) {
             return $this->json(['valid' => false, 'error' => 'Invalid password.'], 401);
@@ -250,7 +246,27 @@ class AuthController extends AbstractController
      *     tags={"Me"},
      *     @OA\Response(
      *         response=200,
-     *         description="Profile retrieved successfully"
+     *         description="Profile retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", example=1),
+     *             @OA\Property(property="email", type="string", format="email", example="user@movilnet.com"),
+     *             @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"ROLE_ADMIN"}),
+     *             @OA\Property(property="is_active", type="boolean", example=true),
+     *             @OA\Property(property="must_change_password", type="boolean", example=false),
+     *             @OA\Property(property="registered_at", type="string", format="date-time", example="2026-06-11T19:30:00Z"),
+     *             @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, example=null),
+     *             @OA\Property(
+     *                 property="employee",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="national_id", type="string", example="V-12345678"),
+     *                 @OA\Property(property="p00_code", type="string", nullable=true, example="P001234"),
+     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+     *                 @OA\Property(property="foto_path", type="string", nullable=true, example="/uploads/photos/xyz.jpg")
+     *             )
+     *         )
      *     ),
      *     @OA\Response(
      *         response=401,
@@ -260,7 +276,6 @@ class AuthController extends AbstractController
      */
     public function me(): JsonResponse
     {
-        // Enforce that the request is authenticated
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->json(['error' => 'Authentication required.'], 401);
@@ -302,17 +317,14 @@ class AuthController extends AbstractController
      */
     public function updatePassword(Request $request): JsonResponse
     {
-        // Enforce that the request is authenticated
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->json(['error' => 'Authentication required.'], 401);
         }
 
-        // Bind the payload to the password update DTO
         $data = json_decode($request->getContent(), true) ?? [];
         $dto = new UpdatePasswordDTO($data);
 
-        // Validate password change rules
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
             $errorMessages = [];
@@ -322,7 +334,6 @@ class AuthController extends AbstractController
             return $this->json(['errors' => $errorMessages], 400);
         }
 
-        // Change the user's password and catch errors
         try {
             $this->userService->updatePassword($currentUser, $dto);
             return $this->json(['message' => 'Password updated successfully.']);
@@ -352,7 +363,27 @@ class AuthController extends AbstractController
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="User registered successfully"
+     *         description="User registered successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", example=1),
+     *             @OA\Property(property="email", type="string", format="email", example="staff@movilnet.com"),
+     *             @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"ROLE_USER"}),
+     *             @OA\Property(property="is_active", type="boolean", example=true),
+     *             @OA\Property(property="must_change_password", type="boolean", example=true),
+     *             @OA\Property(property="registered_at", type="string", format="date-time", example="2026-06-11T19:30:00Z"),
+     *             @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, example=null),
+     *             @OA\Property(
+     *                 property="employee",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="national_id", type="string", example="V-12345678"),
+     *                 @OA\Property(property="p00_code", type="string", nullable=true, example="P001234"),
+     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+     *                 @OA\Property(property="foto_path", type="string", nullable=true, example="/uploads/photos/xyz.jpg")
+     *             )
+     *         )
      *     ),
      *     @OA\Response(
      *         response=400,
@@ -370,12 +401,10 @@ class AuthController extends AbstractController
      */
     public function register(Request $request): JsonResponse
     {
-        // Extract the request payload and bind it to the registration DTO
         $currentUser = $this->getUser();
         $data = json_decode($request->getContent(), true) ?? [];
         $dto = new UserRegisterDTO($data);
 
-        // Validate the DTO properties against defined constraints
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
             $errorMessages = [];
@@ -385,7 +414,6 @@ class AuthController extends AbstractController
             return $this->json(['errors' => $errorMessages], 400);
         }
 
-        // Register the new user and handle potential validation or authorization errors
         try {
             $user = $this->userService->registerUser($dto, $currentUser);
             return $this->json($this->serializeUser($user), 201);
@@ -405,20 +433,51 @@ class AuthController extends AbstractController
      *     summary="List and filter users",
      *     description="Retrieves a paginated list of users. Non-admins can only see active accounts. Admins can filter by active/deleted accounts.",
      *     tags={"Users"},
-     *     @OA\Parameter(name="search", in="query", required=false, description="Search term matching email, first name, or last name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="search", in="query", required=false, description="Search term matching email", @OA\Schema(type="string")),
      *     @OA\Parameter(name="page", in="query", required=false, description="Page number", @OA\Schema(type="integer", default=1)),
      *     @OA\Parameter(name="limit", in="query", required=false, description="Items per page", @OA\Schema(type="integer", default=25)),
      *     @OA\Parameter(name="role", in="query", required=false, description="Filter by user role", @OA\Schema(type="string")),
      *     @OA\Parameter(name="isActive", in="query", required=false, description="Filter by active status (true/false). Non-admins are forced to true.", @OA\Schema(type="boolean", default=true)),
-     *     @OA\Parameter(name="sort", in="query", required=false, description="Sort field (id, email, name, surname)", @OA\Schema(type="string", default="id")),
+     *     @OA\Parameter(name="sort", in="query", required=false, description="Sort field (id, email)", @OA\Schema(type="string", default="id")),
      *     @OA\Parameter(name="order", in="query", required=false, description="Sort direction (ASC, DESC)", @OA\Schema(type="string", default="DESC")),
      *     @OA\Response(
      *         response=200,
      *         description="Successful response",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
-     *             @OA\Property(property="meta", type="object")
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="email", type="string", format="email", example="user@movilnet.com"),
+     *                     @OA\Property(property="full_name", type="string", nullable=true, example="John Doe"),
+     *                     @OA\Property(property="role", type="string", example="ROLE_ADMIN"),
+     *                     @OA\Property(property="isActive", type="boolean", example=true),
+     *                     @OA\Property(property="mustChangePassword", type="boolean", example=false),
+     *                     @OA\Property(property="registeredAt", type="string", example="2026-06-11 19:30:00"),
+     *                     @OA\Property(property="deletedAt", type="string", nullable=true, example=null),
+     *                     @OA\Property(
+     *                         property="employee",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="id", type="integer", example=12),
+     *                         @OA\Property(property="national_id", type="string", example="V-12345678"),
+     *                         @OA\Property(property="p00_code", type="string", nullable=true, example="P001234"),
+     *                         @OA\Property(property="full_name", type="string", example="John Doe"),
+     *                         @OA\Property(property="foto_path", type="string", nullable=true, example="/uploads/photos/xyz.jpg")
+     *                     )
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="meta",
+     *                 type="object",
+     *                 @OA\Property(property="total_items", type="integer", example=10),
+     *                 @OA\Property(property="total_pages", type="integer", example=1),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="limit", type="integer", example=25)
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -436,10 +495,8 @@ class AuthController extends AbstractController
 
         $hasAdminAccess = $this->isGranted('ROLE_ADMIN');
 
-        // Sanitize the URL via DTO, passing dynamic admin privilege flag
         $filterInput = UserFilterDTO::fromRequest($request, $hasAdminAccess);
 
-        // Fetch results from repository using the criteria array
         $result = $this->userRepository->searchAndPaginate($filterInput->toArray());
 
         return $this->json($result);
@@ -462,7 +519,27 @@ class AuthController extends AbstractController
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful response"
+     *         description="Successful response",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", example=1),
+     *             @OA\Property(property="email", type="string", format="email", example="user@movilnet.com"),
+     *             @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"ROLE_ADMIN"}),
+     *             @OA\Property(property="is_active", type="boolean", example=true),
+     *             @OA\Property(property="must_change_password", type="boolean", example=false),
+     *             @OA\Property(property="registered_at", type="string", format="date-time", example="2026-06-11T19:30:00Z"),
+     *             @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, example=null),
+     *             @OA\Property(
+     *                 property="employee",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="national_id", type="string", example="V-12345678"),
+     *                 @OA\Property(property="p00_code", type="string", nullable=true, example="P001234"),
+     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+     *                 @OA\Property(property="foto_path", type="string", nullable=true, example="/uploads/photos/xyz.jpg")
+     *             )
+     *         )
      *     ),
      *     @OA\Response(
      *         response=401,
@@ -492,13 +569,10 @@ class AuthController extends AbstractController
 
         $hasAdminAccess = $this->isGranted('ROLE_ADMIN');
 
-        // Access check:
-        // 1. Regular users can only retrieve themselves.
         if (!$hasAdminAccess && $currentUser->getId() !== $targetUser->getId()) {
             return $this->json(['error' => 'Access denied.'], 403);
         }
 
-        // 2. If the target user is soft-deleted, only admins can view them.
         if ($targetUser->getDeletedAt() !== null && !$hasAdminAccess) {
             return $this->json(['error' => 'User not found.'], 404);
         }
@@ -553,7 +627,6 @@ class AuthController extends AbstractController
      */
     public function forcePassword(int $id, Request $request): JsonResponse
     {
-        // Enforce that the request is authenticated
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->json(['error' => 'Authentication required.'], 401);
@@ -564,11 +637,9 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'User not found.'], 404);
         }
 
-        // Bind request data to the force-password DTO
         $data = json_decode($request->getContent(), true) ?? [];
         $dto = new ForcePasswordChangeDTO($data);
 
-        // Validate password input
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
             $errorMessages = [];
@@ -578,7 +649,6 @@ class AuthController extends AbstractController
             return $this->json(['errors' => $errorMessages], 400);
         }
 
-        // Change target user password directly
         try {
             $this->userService->forcePasswordChange($targetUser, $dto->new_password, $currentUser);
             return $this->json(['message' => 'Password changed successfully.']);
@@ -615,7 +685,27 @@ class AuthController extends AbstractController
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Profile updated successfully"
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", example=1),
+     *             @OA\Property(property="email", type="string", format="email", example="new_email@movilnet.com"),
+     *             @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"ROLE_ADMIN"}),
+     *             @OA\Property(property="is_active", type="boolean", example=true),
+     *             @OA\Property(property="must_change_password", type="boolean", example=false),
+     *             @OA\Property(property="registered_at", type="string", format="date-time", example="2026-06-11T19:30:00Z"),
+     *             @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, example=null),
+     *             @OA\Property(
+     *                 property="employee",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="national_id", type="string", example="V-12345678"),
+     *                 @OA\Property(property="p00_code", type="string", nullable=true, example="P001234"),
+     *                 @OA\Property(property="full_name", type="string", example="John Doe"),
+     *                 @OA\Property(property="foto_path", type="string", nullable=true, example="/uploads/photos/xyz.jpg")
+     *             )
+     *         )
      *     ),
      *     @OA\Response(
      *         response=400,
@@ -637,7 +727,6 @@ class AuthController extends AbstractController
      */
     public function updateProfile(int $id, Request $request): JsonResponse
     {
-        // Enforce that the request is authenticated
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->json(['error' => 'Authentication required.'], 401);
@@ -648,11 +737,9 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'User not found.'], 404);
         }
 
-        // Bind the payload to the profile update DTO
         $data = json_decode($request->getContent(), true) ?? [];
         $dto = new UpdateProfileDTO($data);
 
-        // Validate payload properties
         $errors = $this->validator->validate($dto);
         if (count($errors) > 0) {
             $errorMessages = [];
@@ -662,7 +749,6 @@ class AuthController extends AbstractController
             return $this->json(['errors' => $errorMessages], 400);
         }
 
-        // Update profile details and capture errors
         try {
             $this->userService->updateProfile($targetUser, $dto, $currentUser);
             return $this->json($this->serializeUser($targetUser));
@@ -708,19 +794,16 @@ class AuthController extends AbstractController
      */
     public function deleteUser(int $id): JsonResponse
     {
-        // Enforce that the request is authenticated
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->json(['error' => 'Authentication required.'], 401);
         }
 
-        // Find the target user to delete
         $targetUser = $this->userRepository->find($id);
         if ($targetUser === null) {
             return $this->json(['error' => 'User not found.'], 404);
         }
 
-        // Soft delete the user record
         try {
             $this->userService->softDelete($targetUser, $currentUser);
             return $this->json(['message' => 'User soft-deleted successfully.']);
@@ -772,19 +855,16 @@ class AuthController extends AbstractController
      */
     public function toggleActive(int $id): JsonResponse
     {
-        // Enforce that the request is authenticated
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->json(['error' => 'Authentication required.'], 401);
         }
 
-        // Find the target user to toggle
         $targetUser = $this->userRepository->find($id);
         if ($targetUser === null) {
             return $this->json(['error' => 'User not found.'], 404);
         }
 
-        // Toggle user active status using the service
         try {
             $this->userService->toggleActive($targetUser, $currentUser);
             return $this->json([
@@ -802,21 +882,18 @@ class AuthController extends AbstractController
      */
     private function serializeUser(User $user): array
     {
-        // Extract associated employee data if present
         $employee = $user->getEmployee();
         $employeeData = null;
         if ($employee !== null) {
             $employeeData = [
-                'id' => $employee->getId(),
+                'id'          => $employee->getId(),
                 'national_id' => $employee->getNationalId(),
-                'p00_code' => $employee->getP00Code(),
-                'first_name' => $employee->getFirstName(),
-                'last_name' => $employee->getLastName(),
-                'foto_path' => $employee->getFotoPath(),
+                'p00_code'    => $employee->getP00Code(),
+                'full_name'   => $employee->getFullName(),
+                'foto_path'   => $employee->getFotoPath(),
             ];
         }
 
-        // Return a clean array representation of the User entity
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),

@@ -1,8 +1,9 @@
 security:
     enable_authenticator_manager: true
     role_hierarchy:
-        ROLE_ADMIN:       ROLE_USER
-        ROLE_SUPER_ADMIN: ROLE_ADMIN
+        ROLE_DISTRIBUTION_ADMIN: ROLE_USER
+        ROLE_ADMIN:              [ROLE_DISTRIBUTION_ADMIN, ROLE_USER]
+        ROLE_SUPER_ADMIN:        ROLE_ADMIN
 
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'

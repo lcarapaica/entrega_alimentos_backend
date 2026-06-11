@@ -4,6 +4,10 @@ nelmio_api_doc:
             title: Movilnet Food Delivery API
             description: Automated Operational Control for Food Delivery
             version: 1.0.0
+        tags:
+            - name: Me
+            - name: Users
+            - name: Employees
         components:
             securitySchemes:
                 BearerAuth:

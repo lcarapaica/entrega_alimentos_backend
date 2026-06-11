@@ -1,4 +1,5 @@
-Movilnet Bolsas Backend:
+Movilnet Bolsas Backend
+------------------------
 
 Requirements installed:
 	composer require symfony/orm-pack
@@ -20,6 +21,7 @@ Front-end notes:
 		Discard/delete the stored token (JWT) and refresh_token from its storage (e.g., localStorage, sessionStorage, cookies, or state).
 		Clear the authorization header on the client HTTP client (e.g. Axios, fetch, etc.).
 		Redirect the user to the login screen.
+	Must enforce a lock when an user needs to change their password
 
 TO DO: 
 	* To array in userDTO
@@ -33,6 +35,9 @@ Done:
 	** Create roles
 	** Me module 
 	** Users module 
-	* FINAL USER MODULE TESTING
-	
+	** USER MODULE TESTING
+	** Disables P00 at request of Jaime (11/6)
+	** Import file to update active employee data
+	* Employee CRUD
+	* Evaluate role restrictions users and employees
 	
